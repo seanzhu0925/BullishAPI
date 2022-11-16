@@ -17,10 +17,9 @@ public class ProductServiceImpl implements ProductService {
 
     // In memory store the product inventory info
     private final Map<String, ProductDTO> productDTOMap;
-
     @Autowired
     public ProductServiceImpl() {
-        productDTOMap = new ConcurrentHashMap<>();
+        this.productDTOMap = new ConcurrentHashMap<>();
     }
 
     @Override
