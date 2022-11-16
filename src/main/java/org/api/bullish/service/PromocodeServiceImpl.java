@@ -11,7 +11,9 @@ import org.api.bullish.request.ApplyPromocodeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.api.bullish.model.PromocodeType.HALF_PRICE;
@@ -22,14 +24,11 @@ public class PromocodeServiceImpl implements PromocodeService {
     // In memory store the promocode inventory info
     private final Map<String, PromocodeDTO> promocodeDTOMap;
 
-    private final Map<String, List<PromocodeDTO>> userPromoMap;
-
     private final CheckoutServiceImpl checkoutService;
 
     @Autowired
     public PromocodeServiceImpl(CheckoutServiceImpl checkoutService) {
         this.promocodeDTOMap = new ConcurrentHashMap<>();
-        this.userPromoMap = new ConcurrentHashMap<>();
         this.checkoutService = checkoutService;
     }
 
@@ -45,6 +44,8 @@ public class PromocodeServiceImpl implements PromocodeService {
     @Override
     public Double applyPromocode(ApplyPromocodeRequest request) {
 
+        // key -> userId
+        // value -> (key = productName, value = product)
         Map<String, Map<String, ProductDTO>> userShoppingCart = checkoutService.getShoppingCart();
 
         if (!userShoppingCart.containsKey(request.getUserId())) {
@@ -79,15 +80,15 @@ public class PromocodeServiceImpl implements PromocodeService {
 
     private Double calculateTotalAfterPromocodeApplied(Map<String, Map<String, ProductDTO>> userShoppingCart, ApplyPromocodeRequest request, Map<String, PromocodeDTO> promocodeDTOMap) {
         double totalPrice = 0.0;
-        List<PromocodeDTO> promocode = new ArrayList<>();
-
         for (Map.Entry<String, ProductDTO> curOrder : userShoppingCart.get(request.getUserId()).entrySet()) {
             if (curOrder.getValue().getQuantity() > 1) {
-                promocode.add(promocodeDTOMap.get(request.getPromocodeName()));
-                userPromoMap.put(request.getUserId(), promocode);
+                PromocodeDTO promocode = promocodeDTOMap.get(request.getPromocodeName());
+                promocode.setTotalUsedTime(promocode.getTotalUsedTime() + 1);
+                promocodeDTOMap.replace(request.getPromocodeName(), promocode);
                 int discountCount = curOrder.getValue().getQuantity() / 2 / 2;
                 int totalProduct = curOrder.getValue().getQuantity() - discountCount;
                 totalPrice += totalPrice + (curOrder.getValue().getPrice() * totalProduct);
+                curOrder.getValue().setTotalPriceAfterDiscount(totalPrice);
             }
         }
 
@@ -97,19 +98,19 @@ public class PromocodeServiceImpl implements PromocodeService {
     private PromocodeDTO generatePromocode(AddNewPromocodeRequest request) {
         UUID uuid = UUID.randomUUID();
 
-        return PromocodeDTO.builder()
+        PromocodeDTO promocodeDTO = PromocodeDTO.builder()
                 .promocodeId(uuid.toString())
                 .promocodeName(request.getPromocodeName())
                 .promocodeType(request.getPromocodeType())
+                .totalUsedTime(0)
+                .maxUseTime(request.getMaxUseTime())
                 .createDate(new Date())
+                .lastModifiedDate(new Date())
                 .build();
+
+        promocodeDTOMap.put(promocodeDTO.getPromocodeName(), promocodeDTO);
+
+        return promocodeDTO;
     }
 
-    public Map<String, PromocodeDTO> getPromocodeDTOMap() {
-        return promocodeDTOMap;
-    }
-
-    public Map<String, List<PromocodeDTO>> getUserPromoMap() {
-        return userPromoMap;
-    }
 }

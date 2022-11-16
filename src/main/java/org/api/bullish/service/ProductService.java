@@ -6,7 +6,7 @@ import org.api.bullish.request.RemoveProductRequest;
 
 public interface ProductService {
 
-     ProductDTO createProduct(AddNewProductRequest request);
+    ProductDTO createProduct(AddNewProductRequest request);
 
-     void deleteProduct(RemoveProductRequest request);
+    void deleteProduct(RemoveProductRequest request);
 }

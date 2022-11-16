@@ -17,5 +17,5 @@ public class ProductDTO {
     private Integer quantity;
     private Date createDate;
     private Date lastModifiedDate;
-
+    private Double totalPriceAfterDiscount;
 }

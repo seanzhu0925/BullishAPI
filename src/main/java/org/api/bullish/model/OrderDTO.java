@@ -14,7 +14,6 @@ public class OrderDTO {
     private String userId;
     private Double totalPrice;
     private List<ProductDTO> products;
-    private List<PromocodeDTO> promocodes;
     private Date createDate;
 
 }

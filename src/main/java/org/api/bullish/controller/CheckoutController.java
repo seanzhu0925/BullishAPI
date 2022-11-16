@@ -5,16 +5,14 @@ import org.api.bullish.model.ProductDTO;
 import org.api.bullish.request.AddToCartRequest;
 import org.api.bullish.request.CheckoutRequest;
 import org.api.bullish.request.RemoveFromCartRequest;
-import org.api.bullish.response.ApiResponse;
 import org.api.bullish.service.CheckoutServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Collections;
 import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/api/checkout")
@@ -28,27 +26,35 @@ public class CheckoutController {
     }
 
     @PostMapping("/addToCart")
-    public ResponseEntity<ApiResponse<ProductDTO>> addToCart(@Valid @RequestBody AddToCartRequest request) {
+    public ResponseEntity<ProductDTO> addToCart(@Valid @RequestBody AddToCartRequest request) {
         if (Objects.isNull(request.getProductName())) {
-            return new ResponseEntity<>(new ApiResponse<>(false, Collections.singletonList("product is empty"), HttpStatus.BAD_REQUEST, null), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
-        return new ResponseEntity<>(new ApiResponse<>(true, null, HttpStatus.CREATED, checkoutService.addToCart(request)), HttpStatus.CREATED);
+        return ResponseEntity.ok(checkoutService.addToCart(request));
     }
 
     @DeleteMapping("/remove")
-    public ResponseEntity<ApiResponse<String>> deleteFromCart(@RequestBody RemoveFromCartRequest request) {
+    public ResponseEntity<String> deleteFromCart(@RequestBody RemoveFromCartRequest request) {
         if (Objects.isNull(request.getProductName())) {
-            return new ResponseEntity<>(new ApiResponse<>(false, Collections.singletonList("product is empty"), HttpStatus.BAD_REQUEST, null), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.of(Optional.of("ProductName is empty"));
+        }
+
+        if (Objects.isNull(request.getUserId())) {
+            return ResponseEntity.of(Optional.of("UserId is empty"));
+        }
+
+        if (Objects.isNull(request.getQuantity())) {
+            return ResponseEntity.of(Optional.of("Quantity is empty"));
         }
         checkoutService.deleteFromCart(request);
-        return new ResponseEntity<>(new ApiResponse<>(true, null, HttpStatus.OK, "Product has been removed successfully"), HttpStatus.OK);
+        return ResponseEntity.ok("Product has been removed successfully");
     }
 
     @GetMapping("/")
-    public ResponseEntity<ApiResponse<OrderDTO>> checkout(@RequestBody CheckoutRequest request) {
+    public ResponseEntity<OrderDTO> checkout(@RequestBody CheckoutRequest request) {
         if (Objects.isNull(request.getUserId())) {
-            return new ResponseEntity<>(new ApiResponse<>(false, Collections.singletonList("userId can not be null"), HttpStatus.BAD_REQUEST, null), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
-        return new ResponseEntity<>(new ApiResponse<>(true, null, HttpStatus.OK, checkoutService.checkout(request)), HttpStatus.OK);
+        return ResponseEntity.ok(checkoutService.checkout(request));
     }
 }

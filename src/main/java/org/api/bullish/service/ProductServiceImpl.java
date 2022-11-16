@@ -17,6 +17,7 @@ public class ProductServiceImpl implements ProductService {
 
     // In memory store the product inventory info
     private final Map<String, ProductDTO> productDTOMap;
+
     @Autowired
     public ProductServiceImpl() {
         this.productDTOMap = new ConcurrentHashMap<>();
@@ -43,14 +44,20 @@ public class ProductServiceImpl implements ProductService {
     private ProductDTO generateProduct(AddNewProductRequest request) {
         UUID uuid = UUID.randomUUID();
 
-        return ProductDTO.builder()
+        ProductDTO productDTO = ProductDTO.builder()
                 .productId(uuid.toString())
                 .productName(request.getProductName())
                 .productType(request.getProductType())
                 .price(request.getPrice())
                 .quantity(request.getQuantity())
                 .createDate(new Date())
+                .lastModifiedDate(new Date())
+                .description(request.getDescription())
                 .build();
+
+        productDTOMap.put(productDTO.getProductName(), productDTO);
+
+        return productDTO;
     }
 
     public Map<String, ProductDTO> getProductDTOMap() {

@@ -4,18 +4,13 @@ import org.api.bullish.exception.ProductNotFoundException;
 import org.api.bullish.exception.UserNotFoundException;
 import org.api.bullish.model.OrderDTO;
 import org.api.bullish.model.ProductDTO;
-import org.api.bullish.model.PromocodeDTO;
 import org.api.bullish.request.AddToCartRequest;
 import org.api.bullish.request.CheckoutRequest;
 import org.api.bullish.request.RemoveFromCartRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -25,19 +20,20 @@ public class CheckoutServiceImpl implements CheckoutService {
     // value = for a particular product, how many
     public final Map<String, Map<String, ProductDTO>> shoppingCart;
 
-    private final PromocodeServiceImpl promocodeService;
-
     private final ProductServiceImpl productService;
 
     @Autowired
-    public CheckoutServiceImpl(ProductServiceImpl productService, @Lazy PromocodeServiceImpl promocodeService) {
+    public CheckoutServiceImpl(ProductServiceImpl productService) {
         this.productService = productService;
-        this.promocodeService = promocodeService;
         this.shoppingCart = new ConcurrentHashMap<>();
     }
 
     @Override
     public ProductDTO addToCart(AddToCartRequest request) {
+
+        if (Objects.isNull(request.getUserId())) {
+            throw new UserNotFoundException("No userId found!");
+        }
 
         if (!productService.getProductDTOMap().containsKey(request.getProductName())) {
             throw new ProductNotFoundException("No product found in our inventory!");
@@ -47,12 +43,19 @@ public class CheckoutServiceImpl implements CheckoutService {
             throw new ProductNotFoundException("Not enough product found in our inventory!");
         }
 
+        ProductDTO product = productService.getProductDTOMap().get(request.getProductName());
         // userId does not exist
         if (!shoppingCart.containsKey(request.getUserId())) {
             Map<String, ProductDTO> productDTOMap = new ConcurrentHashMap<>();
             productDTOMap.put(request.getProductName(), ProductDTO.builder()
                     .quantity(request.getQuantity())
                     .productName(request.getProductName())
+                    .price(product.getPrice())
+                    .productType(product.getProductType())
+                    .productId(product.getProductId())
+                    .description(product.getDescription())
+                    .createDate(product.getCreateDate())
+                    .lastModifiedDate(product.getLastModifiedDate())
                     .build());
             shoppingCart.put(request.getUserId(), productDTOMap);
             // userId exist, but product is not in current shopping cart
@@ -62,6 +65,12 @@ public class CheckoutServiceImpl implements CheckoutService {
                 shoppingCart.get(request.getUserId()).put(request.getProductName(), ProductDTO.builder()
                         .quantity(request.getQuantity())
                         .productName(request.getProductName())
+                        .price(product.getPrice())
+                        .productType(product.getProductType())
+                        .productId(product.getProductId())
+                        .description(product.getDescription())
+                        .createDate(product.getCreateDate())
+                        .lastModifiedDate(product.getLastModifiedDate())
                         .build());
                 // userId exist, product quantity needs to be updated
             } else {
@@ -137,33 +146,29 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
 
         double totalPrice = 0.0;
-        List<ProductDTO> productDTO = null;
+        List<ProductDTO> productDTO = new ArrayList<>();
 
-        for (Map.Entry<String, ProductDTO> curOrder : shoppingCart.get(userId).entrySet()) {
-            totalPrice += totalPrice + (curOrder.getValue().getPrice() * curOrder.getValue().getQuantity());
-            productDTO.add(curOrder.getValue());
-        }
-
-        Map<String, List<PromocodeDTO>> userPromocode = promocodeService.getUserPromoMap();
-
-        if (userPromocode.containsKey(userId)) {
-            return OrderDTO.builder()
-                    .orderId(UUID.randomUUID().toString())
-                    .products(productDTO)
-                    .promocodes(userPromocode.get(userId))
-                    .createDate(new Date())
-                    .totalPrice(totalPrice)
-                    .build();
-        }
-
-        return OrderDTO.builder()
+        OrderDTO order = OrderDTO.builder()
                 .orderId(UUID.randomUUID().toString())
-                .products(productDTO)
+                .userId(userId)
                 .createDate(new Date())
-                .totalPrice(totalPrice)
                 .build();
 
 
+        for (Map.Entry<String, ProductDTO> curOrder : shoppingCart.get(userId).entrySet()) {
+            productDTO.add(curOrder.getValue());
+            // apply promocode here if any summing up to total price
+            if (curOrder.getValue().getTotalPriceAfterDiscount() != null) {
+                totalPrice += totalPrice + curOrder.getValue().getTotalPriceAfterDiscount();
+            } else {
+                totalPrice += totalPrice + (curOrder.getValue().getPrice() * curOrder.getValue().getQuantity());
+            }
+        }
+
+        order.setTotalPrice(totalPrice);
+        order.setProducts(productDTO);
+
+        return order;
     }
 
     public Map<String, Map<String, ProductDTO>> getShoppingCart() {
