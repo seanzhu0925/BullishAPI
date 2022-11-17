@@ -274,7 +274,7 @@ public class CheckoutServiceImplTest {
         Assertions.assertNotNull(productNew);
         Assertions.assertNotNull(product);
         Assertions.assertNotNull(order);
-        Assertions.assertEquals(79.2, (double) order.getTotalPrice());
+        Assertions.assertEquals(74.25, (double) order.getTotalPrice());
         Assertions.assertEquals("dummyUser", order.getUserId());
     }
 }
