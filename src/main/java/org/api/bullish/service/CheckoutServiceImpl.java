@@ -5,8 +5,6 @@ import org.api.bullish.exception.UserNotFoundException;
 import org.api.bullish.model.OrderDTO;
 import org.api.bullish.model.ProductDTO;
 import org.api.bullish.request.AddToCartRequest;
-import org.api.bullish.request.CheckoutRequest;
-import org.api.bullish.request.RemoveFromCartRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -87,32 +85,32 @@ public class CheckoutServiceImpl implements CheckoutService {
     }
 
     @Override
-    public void deleteFromCart(RemoveFromCartRequest request) {
+    public void deleteFromCart(final String userId, final String productName, final Integer quantity) {
 
-        if (!shoppingCart.containsKey(request.getUserId())) {
+        if (!shoppingCart.containsKey(userId)) {
             throw new UserNotFoundException("Current user can not perform remove product from shopping cart!");
         }
 
-        if (!shoppingCart.get(request.getUserId()).containsKey(request.getProductName())) {
+        if (!shoppingCart.get(userId).containsKey(productName)) {
             throw new ProductNotFoundException("Product not found in shopping cart!");
         }
 
-        if (shoppingCart.get(request.getUserId()).get(request.getProductName()).getQuantity() < request.getQuantity()) {
+        if (shoppingCart.get(userId).get(productName).getQuantity() < quantity) {
             throw new ProductNotFoundException("Not enough product in the shopping cart to remove!");
         }
 
-        Map<String, ProductDTO> userDTOMap = shoppingCart.get(request.getUserId());
-        ProductDTO product = userDTOMap.get(request.getProductName());
-        Integer updateQuantity = product.getQuantity() - request.getQuantity();
+        Map<String, ProductDTO> userDTOMap = shoppingCart.get(userId);
+        ProductDTO product = userDTOMap.get(productName);
+        Integer updateQuantity = product.getQuantity() - quantity;
         product.setQuantity(updateQuantity);
-        shoppingCart.get(request.getUserId()).replace(request.getProductName(), product);
+        shoppingCart.get(userId).replace(productName, product);
 
-        updateInventory(request);
+        updateInventory(productName, quantity);
     }
 
     @Override
-    public OrderDTO checkout(CheckoutRequest request) {
-        return calculateShoppingCart(shoppingCart, request.getUserId());
+    public OrderDTO checkout(final String userId) {
+        return calculateShoppingCart(shoppingCart, userId);
     }
 
     private void updateInventory(AddToCartRequest request) {
@@ -125,14 +123,14 @@ public class CheckoutServiceImpl implements CheckoutService {
         inventoryMap.replace(request.getProductName(), productUpdate);
     }
 
-    private void updateInventory(RemoveFromCartRequest request) {
+    private void updateInventory(final String productName, final Integer quantity) {
         Map<String, ProductDTO> inventoryMap = productService.getProductDTOMap();
 
-        ProductDTO productUpdate = inventoryMap.get(request.getProductName());
+        ProductDTO productUpdate = inventoryMap.get(productName);
 
-        productUpdate.setQuantity(productUpdate.getQuantity() + request.getQuantity());
+        productUpdate.setQuantity(productUpdate.getQuantity() + quantity);
 
-        inventoryMap.replace(request.getProductName(), productUpdate);
+        inventoryMap.replace(productName, productUpdate);
     }
 
     public OrderDTO calculateShoppingCart(Map<String, Map<String, ProductDTO>> shoppingCart, String userId) {
@@ -159,14 +157,13 @@ public class CheckoutServiceImpl implements CheckoutService {
             productDTO.add(curOrder.getValue());
             // apply promocode here if any summing up to total price
             if (curOrder.getValue().getTotalPriceAfterDiscount() != null) {
-                totalPrice += totalPrice + curOrder.getValue().getTotalPriceAfterDiscount();
+                totalPrice += curOrder.getValue().getTotalPriceAfterDiscount();
             } else {
-                totalPrice += totalPrice + (curOrder.getValue().getPrice() * curOrder.getValue().getQuantity());
+                totalPrice += (curOrder.getValue().getPrice() * curOrder.getValue().getQuantity());
             }
+            order.setTotalPrice(totalPrice);
+            order.setProducts(productDTO);
         }
-
-        order.setTotalPrice(totalPrice);
-        order.setProducts(productDTO);
 
         return order;
     }

@@ -101,10 +101,6 @@ class PromocodeServiceImplTest {
                 .quantity(10)
                 .build();
 
-        CheckoutRequest checkoutRequest = CheckoutRequest.builder()
-                .userId("dummyUser")
-                .build();
-
         AddNewPromocodeRequest addNewPromocodeRequest = AddNewPromocodeRequest.builder()
                 .promocodeName("dummyPromocode")
                 .promocodeType(HALF_PRICE)

@@ -22,7 +22,6 @@ public class AddToCartRequest {
     @NotBlank(message = "ProductName is mandatory")
     private String productName;
 
-    @NotBlank(message = "Quantity is mandatory")
     @Min(1)
     private Integer quantity;
 

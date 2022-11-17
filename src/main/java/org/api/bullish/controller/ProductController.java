@@ -2,7 +2,6 @@ package org.api.bullish.controller;
 
 import org.api.bullish.model.ProductDTO;
 import org.api.bullish.request.AddNewProductRequest;
-import org.api.bullish.request.RemoveProductRequest;
 import org.api.bullish.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +29,12 @@ public class ProductController {
         return ResponseEntity.ok(productService.createProduct(request));
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteProduct(@RequestBody RemoveProductRequest request) {
-        if (Objects.isNull(request.getProductName())) {
+    @DeleteMapping("/productName/{productName}")
+    public ResponseEntity<String> deleteProduct(@PathVariable final String productName) {
+        if (Objects.isNull(productName)) {
             return ResponseEntity.of(Optional.of("productName is empty"));
         }
-        productService.deleteProduct(request);
+        productService.deleteProduct(productName);
         return ResponseEntity.ok("Product has benn deleted");
     }
 

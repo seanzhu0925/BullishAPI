@@ -3,8 +3,6 @@ package org.api.bullish.controller;
 import org.api.bullish.model.OrderDTO;
 import org.api.bullish.model.ProductDTO;
 import org.api.bullish.request.AddToCartRequest;
-import org.api.bullish.request.CheckoutRequest;
-import org.api.bullish.request.RemoveFromCartRequest;
 import org.api.bullish.service.CheckoutServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,28 +31,28 @@ public class CheckoutController {
         return ResponseEntity.ok(checkoutService.addToCart(request));
     }
 
-    @DeleteMapping("/remove")
-    public ResponseEntity<String> deleteFromCart(@RequestBody RemoveFromCartRequest request) {
-        if (Objects.isNull(request.getProductName())) {
+    @DeleteMapping("/userId/{userId}/productName/{productName}/quantity/{quantity}")
+    public ResponseEntity<String> deleteFromCart(@PathVariable final String userId, @PathVariable final String productName, @PathVariable final Integer quantity) {
+        if (Objects.isNull(userId)) {
             return ResponseEntity.of(Optional.of("ProductName is empty"));
         }
 
-        if (Objects.isNull(request.getUserId())) {
+        if (Objects.isNull(productName)) {
             return ResponseEntity.of(Optional.of("UserId is empty"));
         }
 
-        if (Objects.isNull(request.getQuantity())) {
+        if (Objects.isNull(quantity)) {
             return ResponseEntity.of(Optional.of("Quantity is empty"));
         }
-        checkoutService.deleteFromCart(request);
+        checkoutService.deleteFromCart(userId, productName, quantity);
         return ResponseEntity.ok("Product has been removed successfully");
     }
 
-    @GetMapping("/")
-    public ResponseEntity<OrderDTO> checkout(@RequestBody CheckoutRequest request) {
-        if (Objects.isNull(request.getUserId())) {
+    @GetMapping("/userId/{userId}")
+    public ResponseEntity<OrderDTO> checkout(@PathVariable final String userId) {
+        if (Objects.isNull(userId)) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(checkoutService.checkout(request));
+        return ResponseEntity.ok(checkoutService.checkout(userId));
     }
 }

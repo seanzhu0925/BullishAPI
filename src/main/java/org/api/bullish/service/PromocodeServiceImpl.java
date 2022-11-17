@@ -85,13 +85,21 @@ public class PromocodeServiceImpl implements PromocodeService {
                 PromocodeDTO promocode = promocodeDTOMap.get(request.getPromocodeName());
                 promocode.setTotalUsedTime(promocode.getTotalUsedTime() + 1);
                 promocodeDTOMap.replace(request.getPromocodeName(), promocode);
-                int discountCount = curOrder.getValue().getQuantity() / 2 / 2;
-                int totalProduct = curOrder.getValue().getQuantity() - discountCount;
-                totalPrice += totalPrice + (curOrder.getValue().getPrice() * totalProduct);
-                curOrder.getValue().setTotalPriceAfterDiscount(totalPrice);
+                totalPrice += calculateDiscount(curOrder);
             }
         }
 
+        return totalPrice;
+    }
+
+    private static double calculateDiscount(Map.Entry<String, ProductDTO> curOrder) {
+        ProductDTO product = curOrder.getValue();
+        int totalCount = product.getQuantity();
+        int discountCount = curOrder.getValue().getQuantity() / 2;
+        double discountPrice = discountCount * product.getPrice() * 0.5;
+        double regularPrice = (totalCount - discountCount) * product.getPrice();
+        double totalPrice = regularPrice + discountPrice;
+        curOrder.getValue().setTotalPriceAfterDiscount(totalPrice);
         return totalPrice;
     }
 

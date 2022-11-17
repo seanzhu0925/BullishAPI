@@ -3,7 +3,6 @@ package org.api.bullish.service;
 import org.api.bullish.exception.DuplicateProductException;
 import org.api.bullish.model.ProductDTO;
 import org.api.bullish.request.AddNewProductRequest;
-import org.api.bullish.request.RemoveProductRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,12 +110,9 @@ class ProductServiceImplTest {
         Assertions.assertEquals(productDTO.getQuantity(), product.getQuantity());
 
         //Arrange
-        RemoveProductRequest request1 = RemoveProductRequest.builder()
-                .productName("dummyName")
-                .build();
 
         //Act
-        productService.deleteProduct(request1);
+        productService.deleteProduct("dummyName");
 
         //Assert
         assertFalse(productService.getProductDTOMap().containsKey("dummyName"));
@@ -156,13 +152,10 @@ class ProductServiceImplTest {
         Assertions.assertEquals(productDTO.getQuantity(), product.getQuantity());
 
         //Arrange
-        RemoveProductRequest request1 = RemoveProductRequest.builder()
-                .productName("dummyName1")
-                .build();
 
         //Act
         Exception exception = assertThrows(DuplicateProductException.class, () -> {
-            productService.deleteProduct(request1);
+            productService.deleteProduct("dummyName1");
         });
 
         String expectedMessage = "Product has not found in our DB";

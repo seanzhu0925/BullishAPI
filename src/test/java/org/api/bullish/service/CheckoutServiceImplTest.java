@@ -130,16 +130,10 @@ public class CheckoutServiceImplTest {
                 .quantity(10)
                 .build();
 
-        RemoveFromCartRequest removeFromCartRequest = RemoveFromCartRequest.builder()
-                .userId("dummyUser")
-                .productName("dummyProduct")
-                .quantity(10)
-                .build();
-
         //Act
         ProductDTO productNew = productService.createProduct(addNewProductRequest);
         ProductDTO product = checkoutService.addToCart(addToCartRequest);
-        checkoutService.deleteFromCart(removeFromCartRequest);
+        checkoutService.deleteFromCart("dummyUser", "dummyProduct", 10);
 
         //Assert
         Assertions.assertNotNull(productNew);
@@ -164,18 +158,12 @@ public class CheckoutServiceImplTest {
                 .quantity(10)
                 .build();
 
-        RemoveFromCartRequest removeFromCartRequest = RemoveFromCartRequest.builder()
-                .userId("dummyUser")
-                .productName("dummyRemoveProduct")
-                .quantity(10)
-                .build();
-
         //Act
         ProductDTO productNew = productService.createProduct(addNewProductRequest);
         ProductDTO product = checkoutService.addToCart(addToCartRequest);
 
         //Assert
-        Exception exception = assertThrows(ProductNotFoundException.class, () -> checkoutService.deleteFromCart(removeFromCartRequest));
+        Exception exception = assertThrows(ProductNotFoundException.class, () -> checkoutService.deleteFromCart("dummyUser", "dummyRemoveProduct", 10));
 
         String expectedMessage = "Product not found in shopping cart!";
         String actualMessage = exception.getMessage();
@@ -202,18 +190,12 @@ public class CheckoutServiceImplTest {
                 .quantity(10)
                 .build();
 
-        RemoveFromCartRequest removeFromCartRequest = RemoveFromCartRequest.builder()
-                .userId("dummyUser")
-                .productName("dummyProduct")
-                .quantity(15)
-                .build();
-
         //Act
         ProductDTO productNew = productService.createProduct(addNewProductRequest);
         ProductDTO product = checkoutService.addToCart(addToCartRequest);
 
         //Assert
-        Exception exception = assertThrows(ProductNotFoundException.class, () -> checkoutService.deleteFromCart(removeFromCartRequest));
+        Exception exception = assertThrows(ProductNotFoundException.class, () -> checkoutService.deleteFromCart("dummyUser", "dummyProduct", 15));
 
         String expectedMessage = "Not enough product in the shopping cart to remove!";
         String actualMessage = exception.getMessage();
@@ -240,14 +222,10 @@ public class CheckoutServiceImplTest {
                 .quantity(10)
                 .build();
 
-        CheckoutRequest checkoutRequest = CheckoutRequest.builder()
-                .userId("dummyUser")
-                .build();
-
         //Act
         ProductDTO productNew = productService.createProduct(addNewProductRequest);
         ProductDTO product = checkoutService.addToCart(addToCartRequest);
-        OrderDTO order = checkoutService.checkout(checkoutRequest);
+        OrderDTO order = checkoutService.checkout("dummyUser");
 
         //Assert
         Assertions.assertNotNull(productNew);
@@ -273,10 +251,6 @@ public class CheckoutServiceImplTest {
                 .quantity(10)
                 .build();
 
-        CheckoutRequest checkoutRequest = CheckoutRequest.builder()
-                .userId("dummyUser")
-                .build();
-
         AddNewPromocodeRequest addNewPromocodeRequest = AddNewPromocodeRequest.builder()
                 .promocodeName("dummyPromocode")
                 .promocodeType(HALF_PRICE)
@@ -294,7 +268,7 @@ public class CheckoutServiceImplTest {
         ProductDTO product = checkoutService.addToCart(addToCartRequest);
         promocodeService.createPromocode(addNewPromocodeRequest);
         promocodeService.applyPromocode(applyPromocodeRequest);
-        OrderDTO order = checkoutService.checkout(checkoutRequest);
+        OrderDTO order = checkoutService.checkout("dummyUser");
 
         //Assert
         Assertions.assertNotNull(productNew);

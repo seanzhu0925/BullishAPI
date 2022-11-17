@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.api.bullish.model.ProductDTO;
 import org.api.bullish.request.AddNewProductRequest;
-import org.api.bullish.request.RemoveProductRequest;
 import org.api.bullish.service.ProductServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,11 +58,9 @@ public class ProductControllerTest {
 
     @Test
     public void deleteProductIsSuccessful() throws Exception {
-        String url = "/v1/api/product/delete";
-        RemoveProductRequest request = deleteDummyProductRequest();
+        String url = "/v1/api/product//productName/dummyName";
         mockMvc.perform(delete(url)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(gson.toJson(request)))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(200))
                 .andReturn()
                 .getResponse();
@@ -76,12 +73,6 @@ public class ProductControllerTest {
                 .productType(TV)
                 .price(9.9)
                 .quantity(20)
-                .build();
-    }
-
-    private RemoveProductRequest deleteDummyProductRequest() {
-        return RemoveProductRequest.builder()
-                .productName("dummyName")
                 .build();
     }
 
