@@ -1,10 +1,7 @@
 package org.api.bullish.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.api.bullish.model.ProductType;
 
 import javax.validation.constraints.DecimalMin;

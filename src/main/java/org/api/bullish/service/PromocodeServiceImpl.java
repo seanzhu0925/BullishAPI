@@ -32,6 +32,17 @@ public class PromocodeServiceImpl implements PromocodeService {
         this.checkoutService = checkoutService;
     }
 
+    private static double calculateDiscount(Map.Entry<String, ProductDTO> curOrder) {
+        ProductDTO product = curOrder.getValue();
+        int totalCount = product.getQuantity();
+        int discountCount = curOrder.getValue().getQuantity() / 2;
+        double discountPrice = discountCount * product.getPrice() * 0.5;
+        double regularPrice = (totalCount - discountCount) * product.getPrice();
+        double totalPrice = regularPrice + discountPrice;
+        curOrder.getValue().setTotalPriceAfterDiscount(totalPrice);
+        return totalPrice;
+    }
+
     @Override
     public PromocodeDTO createPromocode(AddNewPromocodeRequest request) {
         if (promocodeDTOMap.containsKey(request.getPromocodeName())) {
@@ -89,17 +100,6 @@ public class PromocodeServiceImpl implements PromocodeService {
             }
         }
 
-        return totalPrice;
-    }
-
-    private static double calculateDiscount(Map.Entry<String, ProductDTO> curOrder) {
-        ProductDTO product = curOrder.getValue();
-        int totalCount = product.getQuantity();
-        int discountCount = curOrder.getValue().getQuantity() / 2;
-        double discountPrice = discountCount * product.getPrice() * 0.5;
-        double regularPrice = (totalCount - discountCount) * product.getPrice();
-        double totalPrice = regularPrice + discountPrice;
-        curOrder.getValue().setTotalPriceAfterDiscount(totalPrice);
         return totalPrice;
     }
 
